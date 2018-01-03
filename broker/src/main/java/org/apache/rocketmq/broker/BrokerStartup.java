@@ -99,6 +99,11 @@ public class BrokerStartup {
             }
 
             final BrokerConfig brokerConfig = new BrokerConfig();
+
+            //本地调试用代码
+            brokerConfig.setRocketmqHome("H:\\project\\rocketmq\\distribution");
+            brokerConfig.setNamesrvAddr("localhost:9876");
+
             final NettyServerConfig nettyServerConfig = new NettyServerConfig();
             final NettyClientConfig nettyClientConfig = new NettyClientConfig();
 

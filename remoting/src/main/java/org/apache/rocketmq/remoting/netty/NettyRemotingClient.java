@@ -199,7 +199,7 @@ public class NettyRemotingClient extends NettyRemotingAbstract implements Remoti
                     log.error("scanResponseTable exception", e);
                 }
             }
-        }, 1000 * 3, 1000);
+        }, 1000 * 3, 1000);  // 延时3秒执行，执行间隔1秒
 
         if (this.channelEventListener != null) {
             this.nettyEventExecutor.start();
@@ -350,7 +350,7 @@ public class NettyRemotingClient extends NettyRemotingAbstract implements Remoti
             }
 
             if (update) {
-                Collections.shuffle(addrs);
+                Collections.shuffle(addrs);  // 随机打乱addrs列表
                 log.info("name server address updated. NEW : {} , OLD: {}", addrs, old);
                 this.namesrvAddrList.set(addrs);
             }
@@ -364,11 +364,11 @@ public class NettyRemotingClient extends NettyRemotingAbstract implements Remoti
         if (channel != null && channel.isActive()) {
             try {
                 if (this.rpcHook != null) {
-                    this.rpcHook.doBeforeRequest(addr, request);
+                    this.rpcHook.doBeforeRequest(addr, request);  // 执行用户自定义hook
                 }
                 RemotingCommand response = this.invokeSyncImpl(channel, request, timeoutMillis);
                 if (this.rpcHook != null) {
-                    this.rpcHook.doAfterResponse(RemotingHelper.parseChannelRemoteAddr(channel), request, response);
+                    this.rpcHook.doAfterResponse(RemotingHelper.parseChannelRemoteAddr(channel), request, response);  // 执行用户自定义hook
                 }
                 return response;
             } catch (RemotingSendRequestException e) {
@@ -391,7 +391,7 @@ public class NettyRemotingClient extends NettyRemotingAbstract implements Remoti
 
     private Channel getAndCreateChannel(final String addr) throws InterruptedException {
         if (null == addr)
-            return getAndCreateNameserverChannel();
+            return getAndCreateNameserverChannel();  // addr为null，表示建立与NameServer的Channel
 
         ChannelWrapper cw = this.channelTables.get(addr);
         if (cw != null && cw.isOK()) {

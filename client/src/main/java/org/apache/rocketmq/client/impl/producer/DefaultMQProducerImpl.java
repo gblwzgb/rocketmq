@@ -143,31 +143,36 @@ public class DefaultMQProducerImpl implements MQProducerInner {
             case CREATE_JUST:
                 this.serviceState = ServiceState.START_FAILED;
 
-                this.checkConfig();
+                this.checkConfig();  // 校验producer的group
 
                 if (!this.defaultMQProducer.getProducerGroup().equals(MixAll.CLIENT_INNER_PRODUCER_GROUP)) {
-                    this.defaultMQProducer.changeInstanceNameToPID();
+                    this.defaultMQProducer.changeInstanceNameToPID();  //给producer生成一个instanceName
                 }
 
+                // MQClientManager是饿汉式的单例模式
+                // mQClientFactory是一个MQClientInstance的实例对象。
                 this.mQClientFactory = MQClientManager.getInstance().getAndCreateMQClientInstance(this.defaultMQProducer, rpcHook);
 
+                // 将DefaultMQProducerImpl注册到MQClientInstance的Map内，K=group,V=DefaultMQProducerImpl
+                // 通过putIfAbsent判断有没有注册过，注册过就返回false。
                 boolean registerOK = mQClientFactory.registerProducer(this.defaultMQProducer.getProducerGroup(), this);
                 if (!registerOK) {
-                    this.serviceState = ServiceState.CREATE_JUST;
+                    this.serviceState = ServiceState.CREATE_JUST; //表示service创建了，但是没有启动
                     throw new MQClientException("The producer group[" + this.defaultMQProducer.getProducerGroup()
                         + "] has been created before, specify another name please." + FAQUrl.suggestTodo(FAQUrl.GROUP_NAME_DUPLICATE_URL),
                         null);
                 }
 
+                //
                 this.topicPublishInfoTable.put(this.defaultMQProducer.getCreateTopicKey(), new TopicPublishInfo());
 
                 if (startFactory) {
-                    mQClientFactory.start();
+                    mQClientFactory.start();  // 启动MQClientInstance
                 }
 
                 log.info("the producer [{}] start OK. sendMessageWithVIPChannel={}", this.defaultMQProducer.getProducerGroup(),
-                    this.defaultMQProducer.isSendMessageWithVIPChannel());
-                this.serviceState = ServiceState.RUNNING;
+                    this.defaultMQProducer.isSendMessageWithVIPChannel());  // VIPChannel是什么鬼……
+                this.serviceState = ServiceState.RUNNING;  // 将service的状态设置为RUNNING
                 break;
             case RUNNING:
             case START_FAILED:
@@ -180,16 +185,24 @@ public class DefaultMQProducerImpl implements MQProducerInner {
                 break;
         }
 
+        // 给所有的Broker发送心跳，需要加锁
         this.mQClientFactory.sendHeartbeatToAllBrokerWithLock();
     }
 
+    /**
+     * 只干了一件事情：
+     * 校验producer的group
+     * 不能是null，blank，不能有特殊的字符(只能是%或|或字母或数字或中划线或下划线)，不能使用关键词"DEFAULT_PRODUCER"，不能超过255的长度。
+     */
     private void checkConfig() throws MQClientException {
         Validators.checkGroup(this.defaultMQProducer.getProducerGroup());
 
+        //producer的group必须设置
         if (null == this.defaultMQProducer.getProducerGroup()) {
             throw new MQClientException("producerGroup is null", null);
         }
 
+        //producer的group不能设置为字符串"DEFAULT_PRODUCER"
         if (this.defaultMQProducer.getProducerGroup().equals(MixAll.DEFAULT_PRODUCER_GROUP)) {
             throw new MQClientException("producerGroup can not equal " + MixAll.DEFAULT_PRODUCER_GROUP + ", please specify another one.",
                 null);
@@ -437,8 +450,8 @@ public class DefaultMQProducerImpl implements MQProducerInner {
         final SendCallback sendCallback,
         final long timeout
     ) throws MQClientException, RemotingException, MQBrokerException, InterruptedException {
-        this.makeSureStateOK();
-        Validators.checkMessage(msg, this.defaultMQProducer);
+        this.makeSureStateOK();  // 保证service是RUNNING状态
+        Validators.checkMessage(msg, this.defaultMQProducer);  // 校验消息体是否符合规范
 
         final long invokeID = random.nextLong();
         long beginTimestampFirst = System.currentTimeMillis();
@@ -470,7 +483,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
                                 return null;
                             case SYNC:
                                 if (sendResult.getSendStatus() != SendStatus.SEND_OK) {
-                                    if (this.defaultMQProducer.isRetryAnotherBrokerWhenNotStoreOK()) {
+                                    if (this.defaultMQProducer.isRetryAnotherBrokerWhenNotStoreOK()) {  // 失败重试，默认false
                                         continue;
                                     }
                                 }
@@ -1020,7 +1033,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
      */
     public SendResult send(
         Message msg) throws MQClientException, RemotingException, MQBrokerException, InterruptedException {
-        return send(msg, this.defaultMQProducer.getSendMsgTimeout());
+        return send(msg, this.defaultMQProducer.getSendMsgTimeout());  // 默认超时时间3秒
     }
 
     public void endTransaction(
@@ -1066,7 +1079,7 @@ public class DefaultMQProducerImpl implements MQProducerInner {
 
     public SendResult send(Message msg,
         long timeout) throws MQClientException, RemotingException, MQBrokerException, InterruptedException {
-        return this.sendDefaultImpl(msg, CommunicationMode.SYNC, null, timeout);
+        return this.sendDefaultImpl(msg, CommunicationMode.SYNC, null, timeout);  // 同步发送（底层其实还是异步的，通过Future实现）
     }
 
     public ConcurrentMap<String, TopicPublishInfo> getTopicPublishInfoTable() {

@@ -134,6 +134,7 @@ public class DefaultMQProducer extends ClientConfig implements MQProducer {
      */
     public DefaultMQProducer(final String producerGroup, RPCHook rpcHook) {
         this.producerGroup = producerGroup;
+        // DefaultMQProducer和DefaultMQProducerImpl互相持有对方的引用。（这两个类有什么区别呢？）
         defaultMQProducerImpl = new DefaultMQProducerImpl(this, rpcHook);
     }
 

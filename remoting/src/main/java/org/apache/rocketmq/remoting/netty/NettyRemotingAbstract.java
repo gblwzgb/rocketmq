@@ -380,6 +380,11 @@ public abstract class NettyRemotingAbstract {
                 }
             });
 
+            /**
+             * 阻塞等待response，默认等待3秒。
+             *
+             * 实现原理：通过CountDownLatch实现异步转同步
+             */
             RemotingCommand responseCommand = responseFuture.waitResponse(timeoutMillis);
             if (null == responseCommand) {
                 if (responseFuture.isSendRequestOK()) {

@@ -30,7 +30,7 @@ import org.apache.rocketmq.common.protocol.ResponseCode;
  * Common Validator
  */
 public class Validators {
-    public static final String VALID_PATTERN_STR = "^[%|a-zA-Z0-9_-]+$";
+    public static final String VALID_PATTERN_STR = "^[%|a-zA-Z0-9_-]+$";  //^表示从头匹配，$表示匹配到结尾
     public static final Pattern PATTERN = Pattern.compile(VALID_PATTERN_STR);
     public static final int CHARACTER_MAX_LENGTH = 255;
 
@@ -94,7 +94,7 @@ public class Validators {
             throw new MQClientException(ResponseCode.MESSAGE_ILLEGAL, "the message body length is zero");
         }
 
-        if (msg.getBody().length > defaultMQProducer.getMaxMessageSize()) {
+        if (msg.getBody().length > defaultMQProducer.getMaxMessageSize()) {  // 默认最大4M
             throw new MQClientException(ResponseCode.MESSAGE_ILLEGAL,
                 "the message body size over max value, MAX: " + defaultMQProducer.getMaxMessageSize());
         }

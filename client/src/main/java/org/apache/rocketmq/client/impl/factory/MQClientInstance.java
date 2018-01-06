@@ -126,12 +126,12 @@ public class MQClientInstance {
         this.clientConfig = clientConfig;
         this.instanceIndex = instanceIndex;
         this.nettyClientConfig = new NettyClientConfig();
-        this.nettyClientConfig.setClientCallbackExecutorThreads(clientConfig.getClientCallbackExecutorThreads());
+        this.nettyClientConfig.setClientCallbackExecutorThreads(clientConfig.getClientCallbackExecutorThreads());  // 设置执行回调的线程数量，默认为系统核数
         this.nettyClientConfig.setUseTLS(clientConfig.isUseTLS());
         this.clientRemotingProcessor = new ClientRemotingProcessor(this);
         this.mQClientAPIImpl = new MQClientAPIImpl(this.nettyClientConfig, this.clientRemotingProcessor, rpcHook, clientConfig);
 
-        if (this.clientConfig.getNamesrvAddr() != null) {
+        if (this.clientConfig.getNamesrvAddr() != null) {  // 多个NameSrv通过`;`分隔
             this.mQClientAPIImpl.updateNameServerAddressList(this.clientConfig.getNamesrvAddr());
             log.info("user specified name server address: {}", this.clientConfig.getNamesrvAddr());
         }
@@ -144,7 +144,7 @@ public class MQClientInstance {
 
         this.rebalanceService = new RebalanceService(this);
 
-        this.defaultMQProducer = new DefaultMQProducer(MixAll.CLIENT_INNER_PRODUCER_GROUP);
+        this.defaultMQProducer = new DefaultMQProducer(MixAll.CLIENT_INNER_PRODUCER_GROUP);  // 注意这里
         this.defaultMQProducer.resetClientConfig(clientConfig);
 
         this.consumerStatsManager = new ConsumerStatsManager(this.scheduledExecutorService);
@@ -233,7 +233,7 @@ public class MQClientInstance {
                     // Start request-response channel
                     this.mQClientAPIImpl.start();
                     // Start various schedule tasks
-                    this.startScheduledTask();
+                    this.startScheduledTask();  // 往newSingleThreadScheduledExecutor里加了一系列的定时任务并启动
                     // Start pull service
                     this.pullMessageService.start();
                     // Start rebalance service
@@ -267,7 +267,7 @@ public class MQClientInstance {
                         log.error("ScheduledTask fetchNameServerAddr exception", e);
                     }
                 }
-            }, 1000 * 10, 1000 * 60 * 2, TimeUnit.MILLISECONDS);
+            }, 1000 * 10, 1000 * 60 * 2, TimeUnit.MILLISECONDS);  // 延时10秒执行，每2分钟执行一次
         }
 
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
@@ -280,7 +280,7 @@ public class MQClientInstance {
                     log.error("ScheduledTask updateTopicRouteInfoFromNameServer exception", e);
                 }
             }
-        }, 10, this.clientConfig.getPollNameServerInterval(), TimeUnit.MILLISECONDS);
+        }, 10, this.clientConfig.getPollNameServerInterval(), TimeUnit.MILLISECONDS);  // 延时0.01秒执行，默认间隔30秒
 
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
@@ -293,7 +293,7 @@ public class MQClientInstance {
                     log.error("ScheduledTask sendHeartbeatToAllBroker exception", e);
                 }
             }
-        }, 1000, this.clientConfig.getHeartbeatBrokerInterval(), TimeUnit.MILLISECONDS);
+        }, 1000, this.clientConfig.getHeartbeatBrokerInterval(), TimeUnit.MILLISECONDS);  // 延时1秒执行，默认间隔30秒
 
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
@@ -305,7 +305,7 @@ public class MQClientInstance {
                     log.error("ScheduledTask persistAllConsumerOffset exception", e);
                 }
             }
-        }, 1000 * 10, this.clientConfig.getPersistConsumerOffsetInterval(), TimeUnit.MILLISECONDS);
+        }, 1000 * 10, this.clientConfig.getPersistConsumerOffsetInterval(), TimeUnit.MILLISECONDS);  // 延时10秒执行，默认间隔5秒
 
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
@@ -317,7 +317,7 @@ public class MQClientInstance {
                     log.error("ScheduledTask adjustThreadPool exception", e);
                 }
             }
-        }, 1, 1, TimeUnit.MINUTES);
+        }, 1, 1, TimeUnit.MINUTES);  // 延时一分钟执行，间隔一分钟
     }
 
     public String getClientId() {
@@ -511,12 +511,12 @@ public class MQClientInstance {
     }
 
     private void sendHeartbeatToAllBroker() {
-        final HeartbeatData heartbeatData = this.prepareHeartbeatData();
+        final HeartbeatData heartbeatData = this.prepareHeartbeatData();  //
         final boolean producerEmpty = heartbeatData.getProducerDataSet().isEmpty();
         final boolean consumerEmpty = heartbeatData.getConsumerDataSet().isEmpty();
         if (producerEmpty && consumerEmpty) {
             log.warn("sending heartbeat, but no consumer and no producer");
-            return;
+            return;  // 没有consumer和producer就不发送心跳
         }
 
         if (!this.brokerAddrTable.isEmpty()) {
@@ -562,11 +562,12 @@ public class MQClientInstance {
     }
 
     private void uploadFilterClassSource() {
-        Iterator<Entry<String, MQConsumerInner>> it = this.consumerTable.entrySet().iterator();
+        Iterator<Entry<String, MQConsumerInner>> it = this.consumerTable.entrySet().iterator();  // 开发手册要求的遍历方式，不要用keySet。
         while (it.hasNext()) {
             Entry<String, MQConsumerInner> next = it.next();
             MQConsumerInner consumer = next.getValue();
-            if (ConsumeType.CONSUME_PASSIVELY == consumer.consumeType()) {
+            if (ConsumeType.CONSUME_PASSIVELY == consumer.consumeType()) {  // 如果是PUSH类型的
+                // 到这里说明consumer是DefaultMQPushConsumerImpl的实例。否则是DefaultMQPullConsumerImpl的实例
                 Set<SubscriptionData> subscriptions = consumer.subscriptions();
                 for (SubscriptionData sub : subscriptions) {
                     if (sub.isClassFilterMode() && sub.getFilterClassSource() != null) {
@@ -588,7 +589,7 @@ public class MQClientInstance {
     public boolean updateTopicRouteInfoFromNameServer(final String topic, boolean isDefault,
         DefaultMQProducer defaultMQProducer) {
         try {
-            if (this.lockNamesrv.tryLock(LOCK_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)) {
+            if (this.lockNamesrv.tryLock(LOCK_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)) {  // 锁三秒，防止死锁
                 try {
                     TopicRouteData topicRouteData;
                     if (isDefault && defaultMQProducer != null) {
@@ -661,13 +662,13 @@ public class MQClientInstance {
                     this.lockNamesrv.unlock();
                 }
             } else {
-                log.warn("updateTopicRouteInfoFromNameServer tryLock timeout {}ms", LOCK_TIMEOUT_MILLIS);
+                log.warn("updateTopicRouteInfoFromNameServer tryLock timeout {}ms", LOCK_TIMEOUT_MILLIS);  // 获取锁超时，打印warn日志
             }
         } catch (InterruptedException e) {
             log.warn("updateTopicRouteInfoFromNameServer Exception", e);
         }
 
-        return false;
+        return false;  // update失败
     }
 
     private HeartbeatData prepareHeartbeatData() {

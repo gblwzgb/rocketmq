@@ -101,18 +101,18 @@ public class BrokerStartup {
             final BrokerConfig brokerConfig = new BrokerConfig();
 
             //本地调试用代码
-            brokerConfig.setRocketmqHome("H:\\project\\rocketmq\\distribution");
+            brokerConfig.setRocketmqHome("E:\\project\\rocketmq\\distribution");
             brokerConfig.setNamesrvAddr("localhost:9876");
 
-            final NettyServerConfig nettyServerConfig = new NettyServerConfig();
-            final NettyClientConfig nettyClientConfig = new NettyClientConfig();
+            final NettyServerConfig nettyServerConfig = new NettyServerConfig();  // 对Producer和Consumer来说，Broker是Server
+            final NettyClientConfig nettyClientConfig = new NettyClientConfig();  // 对NameServer来说，Broker是Client
 
             nettyClientConfig.setUseTLS(Boolean.parseBoolean(System.getProperty(TLS_ENABLE,
                 String.valueOf(TlsSystemConfig.tlsMode == TlsMode.ENFORCING))));
-            nettyServerConfig.setListenPort(10911);
-            final MessageStoreConfig messageStoreConfig = new MessageStoreConfig();
+            nettyServerConfig.setListenPort(10911);  // 设置netty server端的端口
+            final MessageStoreConfig messageStoreConfig = new MessageStoreConfig();  // 消息存储的配置
 
-            if (BrokerRole.SLAVE == messageStoreConfig.getBrokerRole()) {
+            if (BrokerRole.SLAVE == messageStoreConfig.getBrokerRole()) {  // 默认ASYNC_MASTER
                 int ratio = messageStoreConfig.getAccessMessageInMemoryMaxRatio() - 10;
                 messageStoreConfig.setAccessMessageInMemoryMaxRatio(ratio);
             }
@@ -136,7 +136,7 @@ public class BrokerStartup {
                 }
             }
 
-            MixAll.properties2Object(ServerUtil.commandLine2Properties(commandLine), brokerConfig);
+            MixAll.properties2Object(ServerUtil.commandLine2Properties(commandLine), brokerConfig);  // 将命令行加的参数加到配置对象里
 
             if (null == brokerConfig.getRocketmqHome()) {
                 System.out.printf("Please set the " + MixAll.ROCKETMQ_HOME_ENV
@@ -212,7 +212,7 @@ public class BrokerStartup {
             // remember all configs to prevent discard
             controller.getConfiguration().registerConfig(properties);
 
-            boolean initResult = controller.initialize();
+            boolean initResult = controller.initialize();  // 初始化
             if (!initResult) {
                 controller.shutdown();
                 System.exit(-3);

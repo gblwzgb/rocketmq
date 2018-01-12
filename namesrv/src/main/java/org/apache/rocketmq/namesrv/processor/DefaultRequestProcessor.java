@@ -79,9 +79,9 @@ public class DefaultRequestProcessor implements NettyRequestProcessor {
                 return this.getKVConfig(ctx, request);
             case RequestCode.DELETE_KV_CONFIG:
                 return this.deleteKVConfig(ctx, request);
-            case RequestCode.REGISTER_BROKER:
-                Version brokerVersion = MQVersion.value2Version(request.getVersion());
-                if (brokerVersion.ordinal() >= MQVersion.Version.V3_0_11.ordinal()) {
+            case RequestCode.REGISTER_BROKER:  // 注册broker
+                Version brokerVersion = MQVersion.value2Version(request.getVersion());  // 获取broker项目的版本号
+                if (brokerVersion.ordinal() >= MQVersion.Version.V3_0_11.ordinal()) {  //ps:ordinal()方法取出枚举类型的定义顺序，从0开始
                     return this.registerBrokerWithFilterServer(ctx, request);
                 } else {
                     return this.registerBroker(ctx, request);

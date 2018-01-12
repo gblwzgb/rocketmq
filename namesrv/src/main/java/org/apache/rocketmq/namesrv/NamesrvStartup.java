@@ -51,6 +51,13 @@ public class NamesrvStartup {
         try {
             //PackageConflictDetect.detectFastjson();
 
+            /**
+             * Apache Commons CLI命令行交互工具
+             * 可以在java -jar的时候加上-h,-p等参数，有各种带参数的风格。
+             * 可参考：https://www.ibm.com/developerworks/cn/java/j-lo-commonscli/
+             *
+             * IDEA调试的时候，可以在Program arguments里加上：-c E:\project\rocketmq\distribution，然后就可以在运行的时候获取这个值了。
+             */
             Options options = ServerUtil.buildCommandlineOptions(new Options());
             commandLine = ServerUtil.parseCmdLine("mqnamesrv", args, buildCommandlineOptions(options), new PosixParser());
             if (null == commandLine) {
@@ -60,7 +67,7 @@ public class NamesrvStartup {
 
             final NamesrvConfig namesrvConfig = new NamesrvConfig();
 
-            namesrvConfig.setRocketmqHome("H:\\project\\rocketmq\\distribution");  //该代码本地调试用
+            namesrvConfig.setRocketmqHome("E:\\project\\rocketmq\\distribution");  //该代码本地调试用
 
             final NettyServerConfig nettyServerConfig = new NettyServerConfig();
             nettyServerConfig.setListenPort(9876);
@@ -124,6 +131,7 @@ public class NamesrvStartup {
 
             controller.start();
 
+            // 序列化类型默认JSON
             String tip = "The Name Server boot success. serializeType=" + RemotingCommand.getSerializeTypeConfigInThisServer();
             log.info(tip);
             System.out.printf(tip + "%n");

@@ -111,7 +111,7 @@ public class RouteInfoManager {
         RegisterBrokerResult result = new RegisterBrokerResult();
         try {
             try {
-                this.lock.writeLock().lockInterruptibly();
+                this.lock.writeLock().lockInterruptibly();  // 获取写锁，如果有其他线程在读或写会阻塞
 
                 Set<String> brokerNames = this.clusterAddrTable.get(clusterName);
                 if (null == brokerNames) {

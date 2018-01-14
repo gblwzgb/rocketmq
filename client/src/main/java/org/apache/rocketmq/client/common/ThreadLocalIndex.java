@@ -27,7 +27,7 @@ public class ThreadLocalIndex {
         Integer index = this.threadLocalIndex.get();
         if (null == index) {
             index = Math.abs(random.nextInt());
-            if (index < 0)
+            if (index < 0)  // 注意Math.abs(Integer.MIN_VALUE)还是负数，所以这里要判断一下。
                 index = 0;
             this.threadLocalIndex.set(index);
         }

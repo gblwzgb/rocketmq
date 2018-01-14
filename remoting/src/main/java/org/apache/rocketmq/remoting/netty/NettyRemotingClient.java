@@ -194,14 +194,15 @@ public class NettyRemotingClient extends NettyRemotingAbstract implements Remoti
             @Override
             public void run() {
                 try {
-                    NettyRemotingClient.this.scanResponseTable();
+                    // 定时扫描ResponseTable表内到期的request请求并清理。如果有回调，执行回调。
+                    NettyRemotingClient.this.scanResponseTable();  //
                 } catch (Throwable e) {
                     log.error("scanResponseTable exception", e);
                 }
             }
         }, 1000 * 3, 1000);  // 延时3秒执行，执行间隔1秒
 
-        if (this.channelEventListener != null) {
+        if (this.channelEventListener != null) {  // 默认null
             this.nettyEventExecutor.start();
         }
     }
@@ -360,7 +361,7 @@ public class NettyRemotingClient extends NettyRemotingAbstract implements Remoti
     @Override
     public RemotingCommand invokeSync(String addr, final RemotingCommand request, long timeoutMillis)
         throws InterruptedException, RemotingConnectException, RemotingSendRequestException, RemotingTimeoutException {
-        final Channel channel = this.getAndCreateChannel(addr);
+        final Channel channel = this.getAndCreateChannel(addr);  // 从Map中获取Channel，没有则创建
         if (channel != null && channel.isActive()) {
             try {
                 if (this.rpcHook != null) {

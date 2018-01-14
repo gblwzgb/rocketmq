@@ -496,7 +496,7 @@ public class MQClientAPIImpl {
             }
             case ResponseCode.SUCCESS: {
                 SendStatus sendStatus = SendStatus.SEND_OK;
-                switch (response.getCode()) {
+                switch (response.getCode()) {  // 这里代码是不是写错了？
                     case ResponseCode.FLUSH_DISK_TIMEOUT:
                         sendStatus = SendStatus.FLUSH_DISK_TIMEOUT;
                         break;
@@ -850,15 +850,23 @@ public class MQClientAPIImpl {
         this.remotingClient.invokeOneway(MixAll.brokerVIPChannel(this.clientConfig.isVipChannelEnabled(), addr), request, timeoutMillis);
     }
 
+    /**
+     *  发送心跳
+     * @param addr 目标地址
+     * @param heartbeatData 心跳包
+     * @param timeoutMillis 超时时间(毫秒)
+     * @return
+     */
     public int sendHearbeat(
         final String addr,
         final HeartbeatData heartbeatData,
         final long timeoutMillis
     ) throws RemotingException, MQBrokerException, InterruptedException {
+        // 封装Request请求，code标识为心跳请求，没有请求头
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.HEART_BEAT, null);
 
-        request.setBody(heartbeatData.encode());
-        RemotingCommand response = this.remotingClient.invokeSync(addr, request, timeoutMillis);
+        request.setBody(heartbeatData.encode());  // 将心跳包转成JSON字符串，再转成byte[]数组，做为Request请求体
+        RemotingCommand response = this.remotingClient.invokeSync(addr, request, timeoutMillis);  // 发送同步请求(底层还是异步的)
         assert response != null;
         switch (response.getCode()) {
             case ResponseCode.SUCCESS: {
@@ -1194,17 +1202,18 @@ public class MQClientAPIImpl {
     public TopicRouteData getTopicRouteInfoFromNameServer(final String topic, final long timeoutMillis)
         throws RemotingException, MQClientException, InterruptedException {
 
-        return getTopicRouteInfoFromNameServer(topic, timeoutMillis, true);
+        return getTopicRouteInfoFromNameServer(topic, timeoutMillis, true);  // true表示允许Topic不存在
     }
 
     public TopicRouteData getTopicRouteInfoFromNameServer(final String topic, final long timeoutMillis,
         boolean allowTopicNotExist) throws MQClientException, InterruptedException, RemotingTimeoutException, RemotingSendRequestException, RemotingConnectException {
-        GetRouteInfoRequestHeader requestHeader = new GetRouteInfoRequestHeader();
+        GetRouteInfoRequestHeader requestHeader = new GetRouteInfoRequestHeader();  // 每种通信请求都对应不同的Header()对象
         requestHeader.setTopic(topic);
 
+        // RemotingCommand对象封装了请求的Code和Header
         RemotingCommand request = RemotingCommand.createRequestCommand(RequestCode.GET_ROUTEINTO_BY_TOPIC, requestHeader);
 
-        RemotingCommand response = this.remotingClient.invokeSync(null, request, timeoutMillis);
+        RemotingCommand response = this.remotingClient.invokeSync(null, request, timeoutMillis);  // 通过netty发送请求
         assert response != null;
         switch (response.getCode()) {
             case ResponseCode.TOPIC_NOT_EXIST: {
@@ -1215,8 +1224,9 @@ public class MQClientAPIImpl {
                 break;
             }
             case ResponseCode.SUCCESS: {
-                byte[] body = response.getBody();
+                byte[] body = response.getBody();  // 获取消息体，该byte数组转成字符串，可以看到是JSON形式的
                 if (body != null) {
+                    // 通过fastjson，把JSON变成指定的对象。decode()方法继承自父类RemotingSerializable。
                     return TopicRouteData.decode(body, TopicRouteData.class);
                 }
             }

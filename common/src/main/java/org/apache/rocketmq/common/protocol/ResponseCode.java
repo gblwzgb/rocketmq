@@ -21,10 +21,19 @@ import org.apache.rocketmq.remoting.protocol.RemotingSysResponseCode;
 
 public class ResponseCode extends RemotingSysResponseCode {
 
+    /**
+     * 刷新磁盘超时
+     */
     public static final int FLUSH_DISK_TIMEOUT = 10;
 
+    /**
+     * slave不可用
+     */
     public static final int SLAVE_NOT_AVAILABLE = 11;
 
+    /**
+     * 清除slave超时
+     */
     public static final int FLUSH_SLAVE_TIMEOUT = 12;
 
     public static final int MESSAGE_ILLEGAL = 13;

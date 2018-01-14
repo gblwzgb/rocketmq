@@ -115,6 +115,15 @@ public class MixAll {
         return DLQ_GROUP_TOPIC_PREFIX + consumerGroup;
     }
 
+    /**
+     * 使用VIP通道？
+     * 是的话，返回broker注册地址的端口-2，如：127.0.0.1:9997
+     * 否的话，返回原地址。
+     *
+     * @param isChange 是
+     * @param brokerAddr broker的注册地址，如：127.0.0.1:9999
+     * @return broker的地址
+     */
     public static String brokerVIPChannel(final boolean isChange, final String brokerAddr) {
         if (isChange) {
             String[] ipAndPort = brokerAddr.split(":");

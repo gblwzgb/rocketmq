@@ -16,6 +16,11 @@
  */
 package org.apache.rocketmq.common.constant;
 
+/**
+ * 通过简单的位运算实现的权限类
+ *
+ * 四位的0和1分别代表了不同的含义
+ */
 public class PermName {
     public static final int PERM_PRIORITY = 0x1 << 3;
     public static final int PERM_READ = 0x1 << 2;

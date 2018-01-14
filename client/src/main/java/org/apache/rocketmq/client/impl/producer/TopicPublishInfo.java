@@ -85,8 +85,8 @@ public class TopicPublishInfo {
     }
 
     public MessageQueue selectOneMessageQueue() {
-        int index = this.sendWhichQueue.getAndIncrement();
-        int pos = Math.abs(index) % this.messageQueueList.size();
+        int index = this.sendWhichQueue.getAndIncrement();  // 获取一个随机数，如果获取过，则在原随机数上+1
+        int pos = Math.abs(index) % this.messageQueueList.size();  // 取模
         if (pos < 0)
             pos = 0;
         return this.messageQueueList.get(pos);

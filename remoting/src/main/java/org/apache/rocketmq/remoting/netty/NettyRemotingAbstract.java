@@ -68,7 +68,8 @@ public abstract class NettyRemotingAbstract {
     protected final Semaphore semaphoreAsync;
 
     /**
-     * This map caches all on-going requests.
+     * 该Map缓存了所有正在进行的请求。
+     * opaque代表每个请求的唯一id。
      */
     protected final ConcurrentMap<Integer /* opaque */, ResponseFuture> responseTable =
         new ConcurrentHashMap<Integer, ResponseFuture>(256);
@@ -273,9 +274,14 @@ public abstract class NettyRemotingAbstract {
 
     /**
      * Execute callback in callback executor. If callback executor is null, run directly in current thread
+     * 在回调执行器内执行回调，如果没有回调执行器，则直接用当前线程执行回调
      */
     private void executeInvokeCallback(final ResponseFuture responseFuture) {
         boolean runInThisThread = false;
+        /**
+         * 模板方法，交由NettyRemotingClient和NettyRemotingServer实现。
+         * 我看了一下，两个类在初始化的时候，都会初始化Executor啊。
+         */
         ExecutorService executor = this.getCallbackExecutor();
         if (executor != null) {
             try {
@@ -326,9 +332,7 @@ public abstract class NettyRemotingAbstract {
     public abstract ExecutorService getCallbackExecutor();
 
     /**
-     * <p>
-     * This method is periodically invoked to scan and expire deprecated request.
-     * </p>
+     * 定期调用此方法来扫描和过期弃用的请求。
      */
     public void scanResponseTable() {
         final List<ResponseFuture> rfList = new LinkedList<ResponseFuture>();
@@ -337,10 +341,11 @@ public abstract class NettyRemotingAbstract {
             Entry<Integer, ResponseFuture> next = it.next();
             ResponseFuture rep = next.getValue();
 
+            // 这里的1秒是为了稳妥起见吗？
             if ((rep.getBeginTimestamp() + rep.getTimeoutMillis() + 1000) <= System.currentTimeMillis()) {
-                rep.release();
+                rep.release();  // TODO:看里面用了Semaphore，打断点却是null的
                 it.remove();
-                rfList.add(rep);
+                rfList.add(rep);  // 放入废弃的列表内
                 log.warn("remove timeout request, " + rep);
             }
         }

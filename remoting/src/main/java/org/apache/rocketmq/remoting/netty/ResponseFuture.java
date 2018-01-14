@@ -47,6 +47,9 @@ public class ResponseFuture {
 
     public void executeInvokeCallback() {
         if (invokeCallback != null) {
+            /**
+             * 用一个线程安全的变量来保证回调只执行一次，暂时还不清楚什么情况下会有多个线程通知执行该方法。
+             */
             if (this.executeCallbackOnlyOnce.compareAndSet(false, true)) {
                 invokeCallback.operationComplete(this);
             }

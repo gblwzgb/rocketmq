@@ -503,7 +503,7 @@ public abstract class NettyRemotingAbstract {
         private final int maxSize = 10000;
 
         public void putNettyEvent(final NettyEvent event) {
-            if (this.eventQueue.size() <= maxSize) {
+            if (this.eventQueue.size() <= maxSize) {  // 队列里最多1W个Event，多的抛弃
                 this.eventQueue.add(event);
             } else {
                 log.warn("event queue size[{}] enough, so drop this event {}", this.eventQueue.size(), event.toString());

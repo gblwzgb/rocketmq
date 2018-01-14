@@ -73,6 +73,11 @@ public class RemotingCommand {
     private LanguageCode language = LanguageCode.JAVA;
     private int version = 0;
     private int opaque = requestId.getAndIncrement();
+    /**
+     * 用两位的二进制数表示是Request，Response，markOnewayRPC
+     * 第一次：0-非OnewayRPC,1-OnewayRPC
+     * 第二位：0-RequestCommand，1-ResponseCommand
+     */
     private int flag = 0;
     private String remark;
     private HashMap<String, String> extFields;

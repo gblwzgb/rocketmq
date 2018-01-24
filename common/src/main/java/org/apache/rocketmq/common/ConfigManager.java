@@ -24,18 +24,18 @@ import org.slf4j.LoggerFactory;
 public abstract class ConfigManager {
     private static final Logger log = LoggerFactory.getLogger(LoggerName.COMMON_LOGGER_NAME);
 
-    public abstract String encode();
+    public abstract String encode();  // 模板方法，由子类实现
 
     public boolean load() {
         String fileName = null;
         try {
-            fileName = this.configFilePath();
-            String jsonString = MixAll.file2String(fileName);
+            fileName = this.configFilePath();  // 调用子类的实现，获取配置文件的路径
+            String jsonString = MixAll.file2String(fileName);  // 读取配置文件，文件里存的是Json字符串
 
             if (null == jsonString || jsonString.length() == 0) {
-                return this.loadBak();
+                return this.loadBak(); // 读.bak文件
             } else {
-                this.decode(jsonString);
+                this.decode(jsonString);  // 调用子类的实现，将字符串的内容，解析成Java对象里的属性
                 log.info("load {} OK", fileName);
                 return true;
             }
@@ -45,6 +45,12 @@ public abstract class ConfigManager {
         }
     }
 
+    /**
+     * 模板方法，由子类实现
+     * 根据根路径（可配），拼接上后缀，获取各种配置文件的路径
+     *
+     * @return 配置文件的路径
+     */
     public abstract String configFilePath();
 
     private boolean loadBak() {
@@ -65,7 +71,7 @@ public abstract class ConfigManager {
         return true;
     }
 
-    public abstract void decode(final String jsonString);
+    public abstract void decode(final String jsonString);  // 模板方法，由子类实现
 
     public synchronized void persist() {
         String jsonString = this.encode(true);
@@ -79,5 +85,5 @@ public abstract class ConfigManager {
         }
     }
 
-    public abstract String encode(final boolean prettyFormat);
+    public abstract String encode(final boolean prettyFormat);  // 模板方法，由子类实现
 }

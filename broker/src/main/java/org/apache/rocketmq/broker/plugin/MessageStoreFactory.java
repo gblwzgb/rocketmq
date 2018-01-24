@@ -25,7 +25,7 @@ public final class MessageStoreFactory {
     public final static MessageStore build(MessageStorePluginContext context, MessageStore messageStore)
         throws IOException {
         String plugin = context.getBrokerConfig().getMessageStorePlugIn();
-        if (plugin != null && plugin.trim().length() != 0) {
+        if (plugin != null && plugin.trim().length() != 0) {  // 有plugin，则使用装饰模式，给原有类套上一层装饰类
             String[] pluginClasses = plugin.split(",");
             for (int i = pluginClasses.length - 1; i >= 0; --i) {
                 String pluginClass = pluginClasses[i];
